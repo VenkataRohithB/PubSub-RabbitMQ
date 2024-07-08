@@ -1,0 +1,21 @@
+RabbitMQ remote installation guide:
+
+-> sudo apt update
+   sudo apt upgrade
+
+-> sudo apt-get install rabbitmq-server
+
+-> sudo systemctl start rabbitmq-server
+
+-> sudo rabbitmq-plugins enable rabbitmq_management
+
+-> rabbitmqctl add_user test passtest
+
+-> rabbitmqctl set_user_tags test administrator
+
+-> rabbitmqctl set_permissions -p / test ".*" ".*" ".*"
+
+-> to remove all the data from rabbitmq - sudo rm -rf /var/lib/rabbitmq/*
+
+
+

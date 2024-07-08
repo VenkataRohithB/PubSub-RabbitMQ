@@ -1,0 +1,40 @@
+SSL Setup for RabbitMQ 
+
+-> open etc/rabbitmq in server and create a directory ssl 
+
+-> In etc/rabbitmq/ssl run the following commands: (change appscrontest.qikpod.com to desired host)
+	openssl genpkey -algorithm RSA -out ca.key
+	openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.crt \
+	    -subj "/CN=MyCA"   
+	openssl genpkey -algorithm RSA -out rabbitmq.key
+	openssl req -new -key rabbitmq.key -out rabbitmq.csr \
+	    -subj "/CN=appscrontest.qikpod.com"
+	openssl x509 -req -in rabbitmq.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out rabbitmq.crt \
+	    -days 365 -sha256 \
+	    -extfile <(printf "subjectAltName=DNS:appscrontest.qikpod.com")
+	
+-> In etc/rabbitmq create a file named rabbitmq.conf with following config
+	listeners.ssl.default = 5671  # SSL port
+	ssl_options.cacertfile = /path/to/ca.crt
+	ssl_options.certfile   = /path/to/rabbitmq.crt
+	ssl_options.keyfile    = /path/to/rabbitmq.key
+	ssl_options.verify     = verify_peer
+	ssl_options.fail_if_no_peer_cert = true
+
+-> set permissions to ssl certs
+    sudo chown rabbitmq:rabbitmq /etc/rabbitmq/ssl/ca.crt
+    sudo chown rabbitmq:rabbitmq /etc/rabbitmq/ssl/rabbitmq.crt
+    sudo chown rabbitmq:rabbitmq /etc/rabbitmq/ssl/rabbitmq.key
+    sudo chmod 644 /etc/rabbitmq/ssl/ca.crt
+    sudo chmod 644 /etc/rabbitmq/ssl/rabbitmq.crt
+    sudo chmod 600 /etc/rabbitmq/ssl/rabbitmq.key
+
+	
+-> restart the rabbitmq server using:
+	- sudo systemctl restart rabbitmq-server
+
+-> scp certs to your local machine
+
+-> in connection code add
+	ssl_context = ssl.create_default_context(cafile=local/path/ca.crt)
+	ssl_context.load_cert_chain(certfile=/local/path/to/rabbitmq.crt, keyfile=local/path/to/rabbitmq.key, password=None)
